@@ -14,7 +14,7 @@ transaction(signers: [Address]) {
       signer.link<&FlowToken.Vault>(/private/DAOTreasury, target: /storage/flowTokenVault)
       let cap = signer.getCapability<&FungibleToken.Vault>(/private/DAOTreasury)
 
-      manager.createMultiSign(intent: "Destroy Token", action: TreasuryActions.Test(_cap: cap))
+      manager.createMultiSign(action: TreasuryActions.Test(_cap: cap))
 
       // save manager somewhere
       signer.save(<- manager, to: /storage/Manager001)
@@ -22,7 +22,7 @@ transaction(signers: [Address]) {
     } else {
       let manager = signer.borrow<&MyMultiSig.Manager>(from: /storage/Manager001)!
       let cap = signer.getCapability<&FungibleToken.Vault>(/private/DAOTreasury)
-      manager.createMultiSign(intent: "Destroy Token", action: TreasuryActions.Test(_cap: cap))
+      manager.createMultiSign(action: TreasuryActions.Test(_cap: cap))
     }
   }
   execute {

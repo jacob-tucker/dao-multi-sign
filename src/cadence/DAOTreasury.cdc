@@ -25,12 +25,28 @@ pub contract DAOTreasury {
       self.multiSignManager.createMultiSign(intent: intent, action: action)
     }
 
+    /*
+      This is arguable the most important function.
+      Note that we pass through a reference to this entire
+      treasury as a parameter here. So the action can do whatever it 
+      wants. This means it's very imporant for the signers
+      to know what they are signing. But it is also brilliant because
+      we can have EVERYTHING with a multisign.
+
+      - Want to transfer tokens? Multisign.
+      - Want to deposit an NFT? Multisign.  
+      - Want to allocate some tokens to X, some tokens to Y,
+        do a backflip, deposit to Z? Multisign.  
+      - Want to add/remove signers? Multisign.  
+      - The possibilities go on.
+    */
     pub fun executeAction(actionUUID: UInt64) {
       let action <- self.multiSignManager.executeAction(actionUUID: actionUUID)
-      action.action.execute({"treasuryRef": &self as &Treasury})
+      action.action.execute({"treasury": &self as &Treasury})
       destroy action
     }
 
+    // Reference to Manager //
     pub fun borrowManager(): &MyMultiSig.Manager {
       return &self.multiSignManager as &MyMultiSig.Manager
     }
@@ -40,6 +56,8 @@ pub contract DAOTreasury {
     }
 
     // ------- Vaults ------- 
+
+    // Deposit a Vault //
     pub fun depositVault(vault: @FungibleToken.Vault) {
       let identifier = vault.getType().identifier
       if self.vaults[identifier] != nil {
@@ -50,15 +68,33 @@ pub contract DAOTreasury {
       }
     }
 
+    // Withdraw some tokens //
+    pub fun withdrawTokens(identifier: String, amount: UFix64): @FungibleToken.Vault {
+      let vaultRef = &self.vaults[identifier] as &FungibleToken.Vault
+      return <- vaultRef.withdraw(amount: amount)
+    }
+
+    // Reference to Vault //
     pub fun borrowVault(identifier: String): &FungibleToken.Vault {
       return &self.vaults[identifier] as &FungibleToken.Vault
     }
 
     // ------- Collections ------- 
+
+    // Deposit a Collection //
     pub fun depositCollection(collection: @NonFungibleToken.Collection) {
       self.collections[collection.getType().identifier] <-! collection
     }
 
+    // TODO: Figure out how to deposit individual NFTs
+
+    // Withdraw an NFT //
+    pub fun withdrawNFT(identifier: String, id: UInt64): @NonFungibleToken.NFT {
+      let collectionRef = &self.collections[identifier] as &NonFungibleToken.Collection
+      return <- collectionRef.withdraw(withdrawID: id)
+    }
+
+    // Reference to Collection //
     pub fun borrowCollection(identifier: String): &NonFungibleToken.Collection {
       return &self.collections[identifier] as &NonFungibleToken.Collection
     }

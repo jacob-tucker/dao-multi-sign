@@ -16,6 +16,7 @@ pub contract MyMultiSig {
     //
 
     pub struct interface Action {
+        pub let intent: String
         pub fun execute(_ params: {String: AnyStruct})
     }
 
@@ -194,8 +195,8 @@ pub contract MyMultiSig {
         // to the resource itself
         access(self) var actions: @{UInt64: MultiSignAction}
 
-        pub fun createMultiSign(intent: String, action: {Action}) {
-            let newAction <- create MultiSignAction(_signers: self.signers.keys, _intent: intent, _action: action)
+        pub fun createMultiSign(action: {Action}) {
+            let newAction <- create MultiSignAction(_signers: self.signers.keys, _intent: action.intent, _action: action)
             self.actions[newAction.uuid] <-! newAction
         }
 
