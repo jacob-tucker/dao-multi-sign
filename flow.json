@@ -1,0 +1,58 @@
+{
+	"emulators": {
+		"default": {
+			"port": 3569,
+			"serviceAccount": "emulator-account"
+		}
+	},
+	"contracts": {
+		"NonFungibleToken": {
+      "source": "./src/cadence/contracts/core/NonFungibleToken.cdc",
+      "aliases": {
+        "testnet": "0x631e88ae7f1d7c20"
+      }
+    },
+		"FungibleToken": {
+      "source": "./src/cadence/contracts/core/FungibleToken.cdc",
+      "aliases": {
+        "testnet": "0x9a0766d93b6608b7"
+      }
+    },
+		"FlowToken": {
+			"source": "./src/cadence/contracts/core/FlowToken.cdc"
+		},
+		"MyMultiSig": "./src/cadence/MyMultiSig.cdc",
+		"DAOTreasury": "./src/cadence/DAOTreasury.cdc",
+		"TreasuryActions": "./src/cadence/TreasuryActions.cdc"
+	},
+	"networks": {
+		"emulator": "127.0.0.1:3569",
+		"mainnet": "access.mainnet.nodes.onflow.org:9000",
+		"testnet": "access.devnet.nodes.onflow.org:9000"
+	},
+	"accounts": {
+		"emulator-account": {
+			"address": "f8d6e0586b0a20c7",
+			"key": "b74adb52a7fd88a26f93dab04b75ed9ff9d0d41e3b65713a585e60a2a2929247"
+		},
+		"testnet-account": {
+      "address": "0x9b8f4facca188481",
+      "key": {
+        "type": "hex",
+        "index": 0,
+        "signatureAlgorithm": "ECDSA_P256",
+        "hashAlgorithm": "SHA3_256",
+        "privateKey": "234876ffab5d5b54726fe525f73bdf8ef9bdb0ed0387a73f647ce3696e8bf2bc"
+      }
+    }
+	},
+	"deployments": {
+		"testnet": {
+			"testnet-account": [
+				"MyMultiSig",
+				"DAOTreasury",
+				"TreasuryActions"
+			]
+		}
+	}
+}
