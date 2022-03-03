@@ -1,7 +1,7 @@
-import MyMultiSig from "../MyMultiSig.cdc";
-import FlowToken from "../contracts/core/FlowToken.cdc"
-import FungibleToken from "../contracts/core/FungibleToken.cdc"
-import TreasuryActions from "../TreasuryActions.cdc"
+import MyMultiSig from "../../MyMultiSig.cdc";
+import FlowToken from "../../contracts/core/FlowToken.cdc"
+import FungibleToken from "../../contracts/core/FungibleToken.cdc"
+import TreasuryActions from "../../TreasuryActions.cdc"
 
 transaction(signers: [Address]) {
   

@@ -27,9 +27,9 @@ pub contract MyMultiSig {
     pub resource MultiSignAction {
 
         pub var totalVerified: Int
-        pub var accountsVerified: {Address: Bool}
+        access(account) var accountsVerified: {Address: Bool}
         pub let intent: String
-        pub let action: {Action}
+        access(contract) let action: {Action}
 
         // ZayVerifierv2 - verifySignature
         //
@@ -189,7 +189,7 @@ pub contract MyMultiSig {
     }
     
     pub resource Manager: ManagerPublic {
-        pub let signers: {Address: Bool}
+        access(account) let signers: {Address: Bool}
 
         // Maps the `uuid` of the MultiSignAction
         // to the resource itself
@@ -200,6 +200,8 @@ pub contract MyMultiSig {
             self.actions[newAction.uuid] <-! newAction
         }
 
+        // Note: In the future, these will probably be access(contract)
+        // so they are multisign actions themselves? Idk
         pub fun addSigner(signer: Address) {
             self.signers.insert(key: signer, true)
         }
@@ -218,14 +220,15 @@ pub contract MyMultiSig {
             return actionRef.readyToExecute()
         }
 
-        pub fun executeAction(actionUUID: UInt64): @MultiSignAction {
+        pub fun executeAction(actionUUID: UInt64, _ params: {String: AnyStruct}) {
             pre {
                 self.readyToExecute(actionUUID: actionUUID):
                     "This action has not received a signature from every signer yet."
             }
             
             let action <- self.actions.remove(key: actionUUID) ?? panic("This action does not exist.")
-            return <- action
+            action.action.execute(params)
+            destroy action
         }
 
         pub fun borrowAction(actionUUID: UInt64): &MultiSignAction {

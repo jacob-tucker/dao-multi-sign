@@ -44,9 +44,7 @@ pub contract DAOTreasury {
       - The possibilities go on.
     */
     pub fun executeAction(actionUUID: UInt64) {
-      let action <- self.multiSignManager.executeAction(actionUUID: actionUUID)
-      action.action.execute({"treasury": &self as &Treasury})
-      destroy action
+      self.multiSignManager.executeAction(actionUUID: actionUUID, {"treasury": &self as &Treasury})
     }
 
     // Reference to Manager //
@@ -124,6 +122,10 @@ pub contract DAOTreasury {
       destroy self.vaults
       destroy self.collections
     }
+  }
+  
+  pub fun createTreasury(initialSigners: [Address]): @Treasury {
+    return <- create Treasury(_initialSigners: initialSigners)
   }
 
   init() {

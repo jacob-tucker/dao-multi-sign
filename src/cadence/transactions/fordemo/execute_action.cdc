@@ -1,4 +1,4 @@
-import MyMultiSig from "../MyMultiSig.cdc"
+import MyMultiSig from "../../MyMultiSig.cdc"
 
 transaction(actionUUID: UInt64) {
 
