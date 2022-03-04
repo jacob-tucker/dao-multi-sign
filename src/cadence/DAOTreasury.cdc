@@ -1,6 +1,9 @@
 import MyMultiSig from "./MyMultiSig.cdc"
 import FungibleToken from "./contracts/core/FungibleToken.cdc"
 import NonFungibleToken from "./contracts/core/NonFungibleToken.cdc"
+// import MyMultiSig from 0x9b8f4facca188481
+// import FungibleToken from 0x9a0766d93b6608b7
+// import NonFungibleToken from 0x631e88ae7f1d7c20
 // import MetadataViews from "./contracts/core/MetadataViews.cdc"
 
 pub contract DAOTreasury {
@@ -14,8 +17,10 @@ pub contract DAOTreasury {
     pub fun depositVault(vault: @FungibleToken.Vault)
     pub fun depositCollection(collection: @NonFungibleToken.Collection)
     pub fun borrowManagerPublic(): &MyMultiSig.Manager{MyMultiSig.ManagerPublic}
-    pub fun borrowVaultPublic(identifier: String): &FungibleToken.Vault{FungibleToken.Receiver, FungibleToken.Balance}
+    pub fun borrowVaultPublic(identifier: String): &FungibleToken.Vault
     pub fun borrowCollectionPublic(identifier: String): &NonFungibleToken.Collection{NonFungibleToken.CollectionPublic}
+    pub fun getVaultIdentifiers(): [String]
+    pub fun getCollectionIdentifiers(): [String]
   }
 
   pub resource Treasury: MyMultiSig.MultiSign, TreasuryPublic {
@@ -81,8 +86,12 @@ pub contract DAOTreasury {
     }
 
     // Public Reference to Vault //
-    pub fun borrowVaultPublic(identifier: String): &FungibleToken.Vault{FungibleToken.Receiver, FungibleToken.Balance} {
-      return &self.vaults[identifier] as &FungibleToken.Vault{FungibleToken.Receiver, FungibleToken.Balance}
+    pub fun borrowVaultPublic(identifier: String): &FungibleToken.Vault {
+      return &self.vaults[identifier] as &FungibleToken.Vault
+    }
+
+    pub fun getVaultIdentifiers(): [String] {
+      return self.vaults.keys
     }
 
 
@@ -111,6 +120,10 @@ pub contract DAOTreasury {
       return &self.collections[identifier] as &NonFungibleToken.Collection{NonFungibleToken.CollectionPublic}
     }
 
+     pub fun getCollectionIdentifiers(): [String] {
+      return self.collections.keys
+    }
+
     init(_initialSigners: [Address]) {
       self.multiSignManager <- MyMultiSig.createMultiSigManager(signers: _initialSigners)
       self.vaults <- {}
@@ -129,8 +142,8 @@ pub contract DAOTreasury {
   }
 
   init() {
-    self.TreasuryStoragePath = /storage/DAOTreasury
-    self.TreasuryPublicPath = /public/DAOTreasury
+    self.TreasuryStoragePath = /storage/DAOTreasury001
+    self.TreasuryPublicPath = /public/DAOTreasury001
   }
 
 }

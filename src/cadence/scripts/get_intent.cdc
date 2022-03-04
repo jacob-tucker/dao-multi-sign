@@ -1,4 +1,3 @@
-import MyMultiSig from "../MyMultiSig.cdc"
 import DAOTreasury from "../DAOTreasury.cdc"
 
 pub fun main(treasuryAddr: Address, actionUUID: UInt64): String {

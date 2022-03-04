@@ -1,9 +1,12 @@
 import DAOTreasury from "../DAOTreasury.cdc"
 
-pub fun main(treasuryAddr: Address): {UInt64: String} {
+pub fun main(treasuryAddr: Address): [[String]] {
   let treasury = getAccount(treasuryAddr).getCapability(DAOTreasury.TreasuryPublicPath)
                     .borrow<&DAOTreasury.Treasury{DAOTreasury.TreasuryPublic}>()
                     ?? panic("A DAOTreasury doesn't exist here.")
 
-  return treasury.borrowManagerPublic().getIntents()
+  let answer: [[String]] = []
+  answer.append(treasury.getVaultIdentifiers())
+  answer.append(treasury.getCollectionIdentifiers())
+  return answer
 }

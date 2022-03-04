@@ -4,8 +4,10 @@ import FungibleToken from "../contracts/core/FungibleToken.cdc"
 
 // An example of proposing an action.
 //
-// ACTION: Transfer `amount` FlowToken from the DAOTreasury
+// Proposed ACTION: Transfer `amount` FlowToken from the DAOTreasury
 // at `treasuryAddr` to `recipientAddr`
+
+// 3.
 transaction(treasuryAddr: Address, recipientAddr: Address, amount: UFix64) {
   
   prepare(signer: AuthAccount) {

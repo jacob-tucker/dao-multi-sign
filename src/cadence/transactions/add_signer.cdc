@@ -1,5 +1,6 @@
 import DAOTreasury from "../DAOTreasury.cdc"
 
+// 2.
 transaction(additionalSigner: Address) {
   
   prepare(signer: AuthAccount) {
