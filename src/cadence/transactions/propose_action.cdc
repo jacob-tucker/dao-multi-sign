@@ -15,7 +15,7 @@ transaction(treasuryAddr: Address, recipientAddr: Address, amount: UFix64) {
                     .borrow<&DAOTreasury.Treasury{DAOTreasury.TreasuryPublic}>()
                     ?? panic("A DAOTreasury doesn't exist here.")
 
-    let recipientVault = getAccount(recipientAddr).getCapability<&FungibleToken.Vault{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+    let recipientVault = getAccount(recipientAddr).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
     let action = TreasuryActions.TransferToken(_recipientVault: recipientVault, _amount: amount)
     treasury.proposeAction(action: action)
   }

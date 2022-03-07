@@ -1,23 +1,26 @@
 import MyMultiSig from "./MyMultiSig.cdc"
 import DAOTreasury from "./DAOTreasury.cdc"
 import FungibleToken from "./contracts/core/FungibleToken.cdc"
+// import MyMultiSig from 0x9b8f4facca188481
+// import DAOTreasury from 0x9b8f4facca188481
+// import FungibleToken from 0x9a0766d93b6608b7
 pub contract TreasuryActions {
 
   // Transfers `amount` tokens from the treasury to `recipientVault`
   pub struct TransferToken: MyMultiSig.Action {
     pub let intent: String
-    pub let recipientVault: Capability<&FungibleToken.Vault{FungibleToken.Receiver}>
+    pub let recipientVault: Capability<&{FungibleToken.Receiver}>
     pub let amount: UFix64
 
     pub fun execute(_ params: {String: AnyStruct}) {
-      let treasuryRef: &DAOTreasury.Treasury = params["treasury"] as! &DAOTreasury.Treasury
+      let treasuryRef: &DAOTreasury.Treasury = params["treasury"]! as! &DAOTreasury.Treasury
 
-      let vaultRef: &FungibleToken.Vault = treasuryRef.borrowVault(identifier: self.recipientVault.borrow().getType().identifier)
+      let vaultRef: &FungibleToken.Vault = treasuryRef.borrowVault(identifier: self.recipientVault.borrow()!.getType().identifier)
       let withdrawnTokens <- vaultRef.withdraw(amount: self.amount)
       self.recipientVault.borrow()!.deposit(from: <- withdrawnTokens)
     }
 
-    init(_recipientVault: Capability<&FungibleToken.Vault{FungibleToken.Receiver}>, _amount: UFix64) {
+    init(_recipientVault: Capability<&{FungibleToken.Receiver}>, _amount: UFix64) {
       self.intent = "Transfer "
                         .concat(_amount.toString())
                         .concat(" ")

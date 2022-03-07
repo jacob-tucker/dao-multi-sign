@@ -17,8 +17,8 @@ pub contract DAOTreasury {
     pub fun depositVault(vault: @FungibleToken.Vault)
     pub fun depositCollection(collection: @NonFungibleToken.Collection)
     pub fun borrowManagerPublic(): &MyMultiSig.Manager{MyMultiSig.ManagerPublic}
-    pub fun borrowVaultPublic(identifier: String): &FungibleToken.Vault
-    pub fun borrowCollectionPublic(identifier: String): &NonFungibleToken.Collection{NonFungibleToken.CollectionPublic}
+    pub fun borrowVaultPublic(identifier: String): &{FungibleToken.Balance, FungibleToken.Receiver}
+    pub fun borrowCollectionPublic(identifier: String): &{NonFungibleToken.CollectionPublic}
     pub fun getVaultIdentifiers(): [String]
     pub fun getCollectionIdentifiers(): [String]
   }
@@ -49,7 +49,8 @@ pub contract DAOTreasury {
       - The possibilities go on.
     */
     pub fun executeAction(actionUUID: UInt64) {
-      self.multiSignManager.executeAction(actionUUID: actionUUID, {"treasury": &self as &Treasury})
+      let selfRef: &Treasury = &self as &Treasury
+      self.multiSignManager.executeAction(actionUUID: actionUUID, {"treasury": selfRef})
     }
 
     // Reference to Manager //
@@ -67,8 +68,7 @@ pub contract DAOTreasury {
     pub fun depositVault(vault: @FungibleToken.Vault) {
       let identifier = vault.getType().identifier
       if self.vaults[identifier] != nil {
-        let ref = &self.vaults[identifier] as &FungibleToken.Vault
-        ref.deposit(from: <- vault)
+        self.vaults[identifier]?.deposit!(from: <- vault)
       } else {
         self.vaults[identifier] <-! vault
       }
@@ -86,8 +86,8 @@ pub contract DAOTreasury {
     }
 
     // Public Reference to Vault //
-    pub fun borrowVaultPublic(identifier: String): &FungibleToken.Vault {
-      return &self.vaults[identifier] as &FungibleToken.Vault
+    pub fun borrowVaultPublic(identifier: String): &{FungibleToken.Balance, FungibleToken.Receiver} {
+      return &self.vaults[identifier] as &{FungibleToken.Balance, FungibleToken.Receiver}
     }
 
     pub fun getVaultIdentifiers(): [String] {
@@ -116,8 +116,8 @@ pub contract DAOTreasury {
     }
 
     // Public Reference to Collection //
-    pub fun borrowCollectionPublic(identifier: String): &NonFungibleToken.Collection{NonFungibleToken.CollectionPublic} {
-      return &self.collections[identifier] as &NonFungibleToken.Collection{NonFungibleToken.CollectionPublic}
+    pub fun borrowCollectionPublic(identifier: String): &{NonFungibleToken.CollectionPublic} {
+      return &self.collections[identifier] as &{NonFungibleToken.CollectionPublic}
     }
 
      pub fun getCollectionIdentifiers(): [String] {
@@ -142,8 +142,8 @@ pub contract DAOTreasury {
   }
 
   init() {
-    self.TreasuryStoragePath = /storage/DAOTreasury001
-    self.TreasuryPublicPath = /public/DAOTreasury001
+    self.TreasuryStoragePath = /storage/DAOTreasury003
+    self.TreasuryPublicPath = /public/DAOTreasury003
   }
 
 }

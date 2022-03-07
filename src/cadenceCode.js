@@ -98,7 +98,8 @@ transaction(treasuryAddr: Address, recipientAddr: Address, amount: UFix64) {
                     .borrow<&DAOTreasury.Treasury{DAOTreasury.TreasuryPublic}>()
                     ?? panic("A DAOTreasury doesn't exist here.")
 
-    let recipientVault = getAccount(recipientAddr).getCapability<&FungibleToken.Vault{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+    let recipientVault = getAccount(recipientAddr).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+    assert(recipientVault.check(), message:" cap no good")
     let action = TreasuryActions.TransferToken(_recipientVault: recipientVault, _amount: amount)
     treasury.proposeAction(action: action)
   }
@@ -136,8 +137,7 @@ pub fun main(treasuryAddr: Address): UFix64 {
                     ?? panic("A DAOTreasury doesn't exist here.")
 
   let identifier: String = "A.7e60df042a9c0868.FlowToken.Vault"
-  let ref: &FungibleToken.Vault = treasury.borrowVaultPublic(identifier: identifier)
-  let vault = ref as &FungibleToken.Vault{FungibleToken.Balance}
+  let vault: &{FungibleToken.Receiver, FungibleToken.Balance} = treasury.borrowVaultPublic(identifier: identifier)
   return vault.balance
 }
 `
