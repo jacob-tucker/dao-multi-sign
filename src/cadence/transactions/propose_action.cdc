@@ -9,17 +9,18 @@ import FungibleToken from "../contracts/core/FungibleToken.cdc"
 
 // 3.
 transaction(treasuryAddr: Address, recipientAddr: Address, amount: UFix64) {
+
+  let Treasury: &DAOTreasury.Treasury{DAOTreasury.TreasuryPublic}
+  let RecipientVault: Capability<&{FungibleToken.Receiver}>
   
   prepare(signer: AuthAccount) {
-    let treasury = getAccount(treasuryAddr).getCapability(DAOTreasury.TreasuryPublicPath)
+    self.Treasury = getAccount(treasuryAddr).getCapability(DAOTreasury.TreasuryPublicPath)
                     .borrow<&DAOTreasury.Treasury{DAOTreasury.TreasuryPublic}>()
                     ?? panic("A DAOTreasury doesn't exist here.")
-
-    let recipientVault = getAccount(recipientAddr).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
-    let action = TreasuryActions.TransferToken(_recipientVault: recipientVault, _amount: amount)
-    treasury.proposeAction(action: action)
+    self.RecipientVault = getAccount(recipientAddr).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
   }
   execute {
-    
+    let action = TreasuryActions.TransferToken(_recipientVault: self.RecipientVault, _amount: amount)
+    self.Treasury.proposeAction(action: action)
   }
 }
