@@ -7,7 +7,7 @@
 // Made by amit @ zay.codes
 //
 
-import NonFungibleToken from "../core/NonFungibleToken.cdc"
+import NonFungibleToken from "./NonFungibleToken.cdc"
 import Crypto
 
 pub contract ZayVerifierV2 {
@@ -15,27 +15,12 @@ pub contract ZayVerifierV2 {
     // Returns timestamp of the last sealed block for when this signature was created
     // If the signature is invalid, returns nil.
     pub fun verifySignature(acctAddress: Address, message: String, keyIds: [Int], signatures: [String], signatureBlock: UInt64, intent: String, identifier: String): UFix64? {
-        // Creates an empty KeyList to add to
         let keyList = Crypto.KeyList()
 
-        // An array of straight up public keys
-        //
-        // WHY DO WE NEED THIS?
-        // To append to `keyList`
         let rawPublicKeys: [String] = []
-        // An array of weights
-        // 
-        // WHY DO WE NEED THIS?
-        // In order to determine total key weight, and also add the 
-        // weight for each KeyListEntry when we add to `keyList`
         let weights: [UFix64] = []
-        // An array of signature algorithms
-        //
-        // WHY DO WE NEED THIS?
-        // To append to `keyList`
         let signAlgos: [UInt] = []
 
-        // Dictionary of keyIds that signed the message on the front end.
         let uniqueKeys: {Int: Bool} = {}
         let account = getAccount(acctAddress)
         
@@ -47,46 +32,13 @@ pub contract ZayVerifierV2 {
 
         var counter = 0
         while (counter < keyIds.length) {
-            /*
-            struct AccountKey {
-                let keyIndex: Int
-                let publicKey: PublicKey
-                let hashAlgorithm: HashAlgorithm
-                let weight: UFix64
-                let isRevoked: Bool
-            }
-            */
-            // Get the key associated `AccountKey` with that keyId
-            let accountKey: AccountKey = account.keys.get(keyIndex: keyIds[counter]) ?? panic("Provided key signature does not exist")
-            
-            /*
-            struct PublicKey {
-                let publicKey: [UInt8]
-                let signatureAlgorithm: SignatureAlgorithm
-                let isValid: Bool
-
-                /// Verifies a signature under the given tag, data and public key.
-                /// It uses the given hash algorithm to hash the tag and data.
-                pub fun verify(
-                    signature: [UInt8],
-                    signedData: [UInt8],
-                    domainSeparationTag: String,
-                    hashAlgorithm: HashAlgorithm
-                ): Bool
-            }
-            */
-            // This is the actual public key string
-            // QUESTION: Why do we encode here just to decode later?
-            let rawPublicKey: String = String.encodeHex(accountKey.publicKey.publicKey)
-            rawPublicKeys.append(rawPublicKey)
-            // Get the weight associated with that accountKey
+            let accountKey = account.keys.get(keyIndex: keyIds[counter]) ?? panic("Provided key signature does not exist")
+            rawPublicKeys.append(String.encodeHex(accountKey.publicKey.publicKey))
             weights.append(accountKey.weight)
-            // Gets the signatureAlgorithm rawValue since it's an enum.
             signAlgos.append(UInt(accountKey.publicKey.signatureAlgorithm.rawValue))
             counter = counter + 1
         }
 
-        // Since we need this weight for the transaction to go through
         var totalWeight = 0.0
         var weightIndex = 0
         while (weightIndex < weights.length) {
@@ -97,17 +49,8 @@ pub contract ZayVerifierV2 {
         // We would like to support these non-custodial Blocto wallets - but can be switched to 1000 weight when Blocto updates this.
         assert(totalWeight >= 999.0, message: "Total weight of combined signatures did not satisfy 999 requirement.")
 
-        // This is all for the account
         var i = 0
         for rawPublicKey in rawPublicKeys {
-            // We are adding to the empty keyList
-            /*
-             pub fun add(
-                _ publicKey: PublicKey,
-                hashAlgorithm: HashAlgorithm,
-                weight: UFix64
-             )
-            */
             keyList.add(
                 PublicKey(
                     publicKey: rawPublicKey.decodeHex(),
@@ -119,7 +62,6 @@ pub contract ZayVerifierV2 {
             i = i + 1
         }
 
-        // In verify we need a [KeyListSignature] so we do that here
         let signatureSet: [Crypto.KeyListSignature] = []
         var j = 0
         for signature in signatures {
@@ -134,21 +76,8 @@ pub contract ZayVerifierV2 {
 
         var signingBlockHashStr = ""
         counter = 0
-        // Takes the height of the latest block and gets the block
-        /*
-        pub struct Block {
-            /// The ID of the block.
-            pub let id: [UInt8; 32]
-
-            /// The height of the block.
-            pub let height: UInt64
-
-            ...
-        }
-        */
         let signingBlock = getBlock(at: signatureBlock)!
         let id = signingBlock.id
-        // QUESTION: Why don't you just say `let ids = id`
         let ids: [UInt8] = []
         while (counter < id.length) {
             ids.append(id[counter])
@@ -165,17 +94,7 @@ pub contract ZayVerifierV2 {
         assert(identifierHex == message.slice(from: intentHex.length, upTo: intentHex.length + identifierHex.length), message: "Failed to validate identifier")
         assert(hexStr == message.slice(from: intentHex.length + identifierHex.length, upTo: message.length), message: "Unable to validate signature provided contained a valid block id.")
 
-        // signedData is supposed to be [UInt8] of the message
-        // The data we're supposed to be verifying out signatures against.
-        // On the front end, we signed a message and got back signatures. We're verifying
-        // that here.
         let signedData = message.decodeHex()
-        /*
-        pub fun verify(
-            signatureSet: [KeyListSignature],
-            signedData: [UInt8]
-        ): Bool
-        */
         let signatureValid = keyList.verify(
             signatureSet: signatureSet,
             signedData: signedData

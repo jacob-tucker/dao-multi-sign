@@ -26,7 +26,7 @@ pub contract MyMultiSig {
 
     pub resource MultiSignAction {
 
-        pub var totalVerified: Int
+        pub var totalVerified: UInt64
         access(account) var accountsVerified: {Address: Bool}
         pub let intent: String
         access(contract) let action: {Action}
@@ -54,27 +54,22 @@ pub contract MyMultiSig {
                 !self.accountsVerified[acctAddress]!:
                     "This address has already signed."
             }
-            // Creates an empty KeyList to add to
             let keyList = Crypto.KeyList()
             let account = getAccount(acctAddress)
 
-            // Really important that we keep these all in order
             let publicKeys: [[UInt8]] = []
             let weights: [UFix64] = []
             let signAlgos: [UInt] = []
             
-            // --- Makes sure the keyIds are unique --- //
             let uniqueKeys: {Int: Bool} = {}
             for id in keyIds {
                 uniqueKeys[id] = true
             }
             assert(uniqueKeys.keys.length == keyIds.length, message: "Invalid duplicates of the same keyID provided for signature")
-            // ---------------------------------------- //
 
             var counter = 0
             var totalWeight = 0.0
             while (counter < keyIds.length) {
-                // Get the key associated `AccountKey`/`KeyListEntry` with that keyId
                 let accountKey: AccountKey = account.keys.get(keyIndex: keyIds[counter]) ?? panic("Provided key signature does not exist")
                 
                 publicKeys.append(accountKey.publicKey.publicKey)
@@ -82,9 +77,6 @@ pub contract MyMultiSig {
                 weights.append(keyWeight)
                 totalWeight = totalWeight + keyWeight
 
-                // Note on rawValue:
-                // 1 == ECDSA_P256
-                // 2 == ECDSA_secp256k1
                 signAlgos.append(UInt(accountKey.publicKey.signatureAlgorithm.rawValue))
 
                 counter = counter + 1
@@ -113,7 +105,7 @@ pub contract MyMultiSig {
             for signature in signatures {
                 signatureSet.append(
                     Crypto.KeyListSignature(
-                        keyIndex: j,
+                        keyIndex: keyIds[j],
                         signature: signature.decodeHex()
                     )
                 )
@@ -123,9 +115,6 @@ pub contract MyMultiSig {
             counter = 0
             let signingBlock = getBlock(at: signatureBlock)!
             let blockId = signingBlock.id
-            // The format of `blockId` is a fixed-sized array
-            // so have to adapt here by populating blockIds
-            // with the same info
             let blockIds: [UInt8] = []
             while (counter < blockId.length) {
                 blockIds.append(blockId[counter])
@@ -166,10 +155,6 @@ pub contract MyMultiSig {
             }
         }
 
-        pub fun readyToExecute(): Bool {
-            return self.totalVerified == self.accountsVerified.keys.length
-        }
-
         init(_signers: [Address], _intent: String, _action: {Action}) {
             self.totalVerified = 0
             self.accountsVerified = {}
@@ -190,6 +175,7 @@ pub contract MyMultiSig {
     
     pub resource Manager: ManagerPublic {
         access(account) let signers: {Address: Bool}
+        pub var threshold: UInt64
 
         // Maps the `uuid` of the MultiSignAction
         // to the resource itself
@@ -210,6 +196,10 @@ pub contract MyMultiSig {
             self.signers.remove(key: signer)
         }
 
+        pub fun updateThreshold(newThreshold: UInt64) {
+            self.threshold = newThreshold
+        }
+
         pub fun destroyAction(actionUUID: UInt64) {
             let removedAction <- self.actions.remove(key: actionUUID) ?? panic("This action does not exist.")
             destroy removedAction
@@ -217,7 +207,7 @@ pub contract MyMultiSig {
 
         pub fun readyToExecute(actionUUID: UInt64): Bool {
             let actionRef: &MultiSignAction = &self.actions[actionUUID] as &MultiSignAction
-            return actionRef.readyToExecute()
+            return actionRef.totalVerified >= self.threshold
         }
 
         pub fun executeAction(actionUUID: UInt64, _ params: {String: AnyStruct}) {
@@ -247,9 +237,10 @@ pub contract MyMultiSig {
             return returnVal
         }
 
-        init(_initialSigners: [Address]) {
+        init(_initialSigners: [Address], _initialThreshold: UInt64) {
             self.signers = {}
             self.actions <- {}
+            self.threshold = _initialThreshold
 
             for signer in _initialSigners {
                 self.signers.insert(key: signer, true)
@@ -265,7 +256,7 @@ pub contract MyMultiSig {
     // ------- Functions --------
     //
         
-    pub fun createMultiSigManager(signers: [Address]): @Manager {
-        return <- create Manager(_initialSigners: signers)
+    pub fun createMultiSigManager(signers: [Address], threshold: UInt64): @Manager {
+        return <- create Manager(_initialSigners: signers, _initialThreshold: threshold)
     }
 }
