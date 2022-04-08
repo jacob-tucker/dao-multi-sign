@@ -71,7 +71,25 @@ pub contract TreasuryActions {
 
     init(_signer: Address) {
       self.signer = _signer
-      self.intent = "Add a signer to the Treasury."
+      self.intent = "Add ".concat((_signer as Address).toString()).concat(" as a signer to the Treasury.")
+    }
+  }
+
+  // Add a new signer to the treasury
+  pub struct RemoveSigner: MyMultiSig.Action {
+    pub let signer: Address
+    pub let intent: String
+
+    pub fun execute(_ params: {String: AnyStruct}) {
+      let treasuryRef: &DAOTreasury.Treasury = params["treasury"]! as! &DAOTreasury.Treasury
+
+      let manager = treasuryRef.borrowManager()
+      manager.removeSigner(signer: self.signer)
+    }
+
+    init(_signer: Address) {
+      self.signer = _signer
+      self.intent = "Remove ".concat((_signer as Address).toString()).concat(" as a signer to the Treasury.")
     }
   }
 
