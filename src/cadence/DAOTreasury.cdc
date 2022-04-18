@@ -34,7 +34,6 @@ pub contract DAOTreasury {
     }
 
     /*
-      This is arguable the most important function.
       Note that we pass through a reference to this entire
       treasury as a parameter here. So the action can do whatever it 
       wants. This means it's very imporant for the signers

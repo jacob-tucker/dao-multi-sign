@@ -5,13 +5,13 @@ import * as t from "@onflow/types";
 import { createTreasury, executeAction, getIntents, getIntent, signAction, proposeAction, fundTreasury, getVaultBalance, getTreasuryIdentifiers } from "./cadenceCode.js";
 
 fcl.config()
-  .put("accessNode.api", "https://testnet.onflow.org")
-  .put("discovery.wallet", "https://flow-wallet-testnet.blocto.app/authn")
-  .put("0xMS", "0x9b8f4facca188481")
-  .put("0xFungibleToken", "0x9a0766d93b6608b7")
-  .put("0xFlowToken", "0x7e60df042a9c0868")
+  .put("accessNode.api", "http://localhost:8080") // "https://testnet.onflow.org")
+  .put("discovery.wallet", "http://localhost:8701/fcl/authn") //"https://flow-wallet-testnet.blocto.app/authn")
+  .put("0xMS", "0xf8d6e0586b0a20c7")
+  .put("0xFungibleToken", "0xee82856bf20e2aa6")
+  .put("0xFlowToken", "0x0ae53cb6e3f42a79")
 
-const treasury = '0x6c0d53c676256e8c';
+const treasury = '0xf8d6e0586b0a20c7';
 function App() {
   const [user, setUser] = useState({});
   const [actionUUID, setActionUUID] = useState();
@@ -34,7 +34,8 @@ function App() {
     const transactionId = await fcl.send([
       fcl.transaction(createTreasury),
       fcl.args([
-        fcl.arg([user.addr], t.Array(t.Address))
+        fcl.arg([user.addr], t.Array(t.Address)),
+        fcl.arg(1, t.UInt64)
       ]),
       fcl.proposer(fcl.authz),
       fcl.payer(fcl.authz),
@@ -121,9 +122,11 @@ function App() {
       return s.keyId;
     });
     const signatures = sig.map((s) => {
-      return s.signature;
+      return s.signature.signature;
     });
-    
+    console.log(sig)
+    console.log(signatures)
+    console.log(MSG)
     const transactionId = await fcl.send([
       fcl.transaction(signAction),
       fcl.args([

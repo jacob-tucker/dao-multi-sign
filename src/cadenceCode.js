@@ -2,10 +2,10 @@ export const createTreasury = `
 import DAOTreasury from 0xMS
 
 // 1.
-transaction(initialSigners: [Address]) {
+transaction(initialSigners: [Address], initialThreshold: UInt64) {
   
   prepare(signer: AuthAccount) {
-    signer.save(<- DAOTreasury.createTreasury(initialSigners: initialSigners), to: DAOTreasury.TreasuryStoragePath)
+    signer.save(<- DAOTreasury.createTreasury(initialSigners: initialSigners, initialThreshold: initialThreshold), to: DAOTreasury.TreasuryStoragePath)
     signer.link<&DAOTreasury.Treasury{DAOTreasury.TreasuryPublic}>(DAOTreasury.TreasuryPublicPath, target: DAOTreasury.TreasuryStoragePath)
   }
   execute {
@@ -136,7 +136,7 @@ pub fun main(treasuryAddr: Address): UFix64 {
                     .borrow<&DAOTreasury.Treasury{DAOTreasury.TreasuryPublic}>()
                     ?? panic("A DAOTreasury doesn't exist here.")
 
-  let identifier: String = "A.7e60df042a9c0868.FlowToken.Vault"
+  let identifier: String = "A.0ae53cb6e3f42a79.FlowToken.Vault"
   let vault: &{FungibleToken.Receiver, FungibleToken.Balance} = treasury.borrowVaultPublic(identifier: identifier)
   return vault.balance
 }

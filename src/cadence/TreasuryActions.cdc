@@ -27,7 +27,7 @@ pub contract TreasuryActions {
                         .concat(" ")
                         .concat(_recipientVault.getType().identifier)
                         .concat(" tokens from the treasury to ")
-                        .concat(_recipientVault.borrow()!.owner!.address.toString())
+                        .concat((_recipientVault.borrow()!.owner!.address as Address).toString())
       self.recipientVault = _recipientVault
       self.amount = _amount
     }
@@ -51,7 +51,7 @@ pub contract TreasuryActions {
       self.intent = "Transfer a "
                         .concat(_recipientCollection.getType().identifier)
                         .concat(" NFT from the treasury to ")
-                        .concat(_recipientCollection.borrow()!.uuid.toString())
+                        .concat((_recipientCollection.borrow()!.owner!.address as Address).toString())
       self.recipientCollection = _recipientCollection
       self.withdrawID = _nftID
     }
@@ -107,7 +107,7 @@ pub contract TreasuryActions {
 
     init(_threshold: UInt64) {
       self.threshold = _threshold
-      self.intent = "Update the threshold of signers needed to execute an action in the Treasury."
+      self.intent = "Update the threshold of signers needed to execute an action in the Treasury to ".concat(_threshold.toString())
     }
   }
 
